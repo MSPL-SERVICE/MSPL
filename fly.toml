@@ -1,0 +1,5 @@
+app = "mspl-services"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"

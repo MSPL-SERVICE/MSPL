@@ -1,0 +1,11 @@
+{
+  "name": "Magnifiq Services Private Limited",
+  "description": "Real-time inventory levels, GPS camera attendance clock-ins, corporate Parental/MD and HR document verification terminals for Magnifiq Services.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
