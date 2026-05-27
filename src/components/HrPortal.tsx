@@ -282,12 +282,9 @@ export default function HrPortal({
       throw new Error('Firebase auth is not configured. Please check your Firebase settings.');
     }
 
-    if (!recaptchaVerifierRef.current) {
-      if (!recaptchaContainerRef.current) {
-        throw new Error('Recaptcha container is not ready.');
-      }
-
-      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+   if (!recaptchaVerifierRef.current) {
+      // CHANGE: Targeting the specific string ID coordinate instead of the reference element
+      recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container-hr', {
         size: 'invisible'
       });
     }
@@ -336,6 +333,10 @@ export default function HrPortal({
       setOtpStatus('Preparing secure OTP verification...');
 
       const verifier = await ensureRecaptchaVerifier();
+      
+      // INSERT: Force Google reCAPTCHA to solve before making the SMS handshake
+      await verifier.verify(); 
+
       const phoneNumber = normalizePhoneForFirebase(phoneInput);
       const result = await signInWithPhoneNumber(auth, phoneNumber, verifier);
 
@@ -1258,7 +1259,7 @@ export default function HrPortal({
                   />
                 </div>
 
-                <div ref={recaptchaContainerRef} className="h-0 overflow-hidden opacity-0 pointer-events-none" />
+                <div id="recaptcha-container-hr" ref={recaptchaContainerRef} className="h-0 overflow-hidden opacity-0 pointer-events-none" />
 
                 <button
                   type="submit"
