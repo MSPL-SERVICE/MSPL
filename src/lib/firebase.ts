@@ -17,6 +17,7 @@ let storage;
 if (isConfigValid) {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
+  auth.languageCode = 'en';
   // Using the databaseId if provided
   const dbOptions = (firebaseConfig as any).firestoreDatabaseId ? { databaseId: (firebaseConfig as any).firestoreDatabaseId } : {};
   db = getFirestore(app, (dbOptions as any).databaseId);

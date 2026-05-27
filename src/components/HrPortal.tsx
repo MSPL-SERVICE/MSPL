@@ -343,6 +343,7 @@ export default function HrPortal({
       setOtpStatus(`OTP request accepted for ${formatIndiaPhoneNumber(phoneInput)}. Check your phone and enter the 6-digit code below.`);
       toast(`OTP request accepted for ${formatIndiaPhoneNumber(phoneInput)}. Please check your phone and enter the verification code.`, 'info');
     } catch (error: any) {
+      console.error('Firebase OTP send failed:', error);
       const errorCode = error?.code;
       let errorMessage = error?.message || 'Unable to send OTP right now.';
 
@@ -352,8 +353,19 @@ export default function HrPortal({
         errorMessage = 'The phone number is invalid. Please confirm the 10-digit mobile number and try again.';
       } else if (errorCode === 'auth/recaptcha-not-enabled') {
         errorMessage = 'The OTP verifier is not available on this page. Please refresh and try again.';
+      } else if (errorCode === 'auth/unauthorized-domain') {
+        errorMessage = 'This domain is not authorized for Firebase Phone Authentication. Add the current domain under Authorized domains in Firebase Console.';
+      } else if (errorCode === 'auth/quota-exceeded') {
+        errorMessage = 'SMS quota exceeded for this Firebase project. Please check Firebase usage limits or try again later.';
+      } else if (errorCode === 'auth/missing-app-credential') {
+        errorMessage = 'App verification failed. This app may not be served over an allowed domain or the reCAPTCHA setup is incomplete.';
       }
 
+      if (errorCode) {
+        errorMessage = `${errorMessage} (${errorCode})`;
+      }
+
+      setOtpStatus(errorMessage);
       toast(errorMessage, 'error');
       resetPhoneAuthState();
     } finally {
@@ -1259,6 +1271,9 @@ export default function HrPortal({
 
               <div className="text-[10px] uppercase font-mono text-center text-slate-400 select-none">
                 🔒 Use a real mobile number that can receive SMS. Firebase will send the OTP instantly and the code will be validated before access is granted.
+              </div>
+              <div className="text-[10px] uppercase font-mono text-center text-slate-400 select-none">
+                🔍 Current host: {typeof window !== 'undefined' ? window.location.host : 'unknown'}
               </div>
             </div>
           )}
