@@ -36,5 +36,9 @@
   },
   "overrides": {
     "node-domexception": "npm:events@3.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3"
   }
 }
