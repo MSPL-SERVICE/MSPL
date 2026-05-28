@@ -76,7 +76,6 @@ export default function HrPortal({
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const recaptchaContainerRef = useRef<HTMLDivElement | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-  const recaptchaRenderedRef = useRef(false);
 
   // --- Employee/Director States ---
   const [empSelectedId, setEmpSelectedId] = useState('');
@@ -97,14 +96,10 @@ export default function HrPortal({
   const [newId, setNewId] = useState('');
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const [newPass, setNewPass] = useState('');
-  const [replyTexts, setReplyTexts] = useState<{[queryId: string]: string}>({});
+  const [newPass, setNewPass} = useState('');
 
   // Finance States
-  const [showAddFinance, setShowAddFinance] = useState(false);
-  const [finType, setFinType] = useState<'income' | 'debit' | 'investment' | 'expense'>('income');
-  const [finTitle, setFinTitle] = useState('');
-  const [finAmount, setFinAmount] = useState<number>(0);
+  const [recycleBinItems, setRecycleBinItems] = useState<RecycleBinItem[]>([]);
 
   // --- Sync Effects ---
   useEffect(() => {
@@ -120,9 +115,9 @@ export default function HrPortal({
     return () => { unsubHr(); unsubBin(); unsubFin(); };
   }, []);
 
-  // --- OTP Logic ---
+  // --- OTP Initialization ---
   useEffect(() => {
-    if (!(auth as any)?.app || !recaptchaContainerRef.current) return;
+    if (!auth || !recaptchaContainerRef.current) return;
     if (!recaptchaVerifierRef.current) {
       recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
     }
@@ -131,7 +126,6 @@ export default function HrPortal({
   const handleSendRealOtp = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-   // 1. Extract exactly the last 10 digits from whatever is typed
     const cleanDigits = phoneInput.replace(/[^0-9]/g, ''); 
     const last10Digits = cleanDigits.slice(-10); 
 
@@ -140,13 +134,15 @@ export default function HrPortal({
       return;
     }
 
-    // 2. Format the number precisely with the +91 regional prefix for Firebase
     const phoneNumber = `+91${last10Digits}`;
     try {
       setIsSendingOtp(true);
       setOtpStatus('Initializing secure Firebase handshake...');
       
-      // 3. Use the formatted 'phoneNumber' for the Firebase call
+      if (!recaptchaVerifierRef.current && recaptchaContainerRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
+      }
+
       const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifierRef.current!);
       
       setConfirmationResult(result);
@@ -158,7 +154,7 @@ export default function HrPortal({
     } finally {
       setIsSendingOtp(false);
     }
-  }; // This closes handleSendRealOtp cleanly
+  };
 
   // --- Auth Handlers ---
   const handleEmployeeLogin = (e: React.FormEvent) => {
@@ -171,13 +167,14 @@ export default function HrPortal({
       toast('Invalid Credentials', 'error');
     }
   };
+
   const handleLoginHr = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setIsVerifyingOtp(true);
       await confirmationResult.confirm(otpInput);
-      const normalizedPhone = sanitizeIndiaMobileDigits(phoneInput);
-      const foundHr = registeredHrsList.find(hr => hr.phoneNumber === normalizedPhone);
+      const normalizedPhone = phoneInput.replace(/[^0-9]/g, '').slice(-10);
+      const foundHr = registeredHrsList.find(hr => hr.phoneNumber.replace(/[^0-9]/g, '').slice(-10) === normalizedPhone);
       
       if (foundHr && foundHr.password === passwordInput && foundHr.verified) {
         setHrUser(foundHr);
@@ -211,10 +208,9 @@ export default function HrPortal({
     setHrUser(null);
   };
 
-  // --- HR Actions ---
   const handleSaveEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanPhone = sanitizeIndiaMobileDigits(newPhone);
+    const cleanPhone = newPhone.replace(/[^0-9]/g, '').slice(-10);
     const newEmp: Employee = {
       id: newId.toUpperCase(),
       name: newName,
@@ -281,17 +277,23 @@ export default function HrPortal({
                   onChange={e => setPhoneInput(sanitizeIndiaMobileDigits(e.target.value))}
                   className="flex-1 bg-slate-50 border p-3 rounded-xl"
                 />
-                <button type="button" onClick={handleSendRealOtp} className="px-4 bg-slate...">
-        Send OTP
-      </button>
-    </div>
+                <button 
+                  type="button" 
+                  onClick={handleSendRealOtp} 
+                  disabled={isSendingOtp}
+                  className="px-4 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-500 transition disabled:opacity-50"
+                >
+                  {isSendingOtp ? 'Sending...' : 'Send OTP'}
+                </button>
+              </div>
 
-    {/* PASTE THIS LINE EXACTLY HERE */}
-    <div id="recaptcha-container"></div>
+              {/* The clean instance reference anchor linked directly to our code hook */}
+              {/* CHANGE THIS EXACT LINE RIGHT HERE */}
+    <div ref={recaptchaContainerRef} id="recaptcha-container" className="my-1 text-center"></div>
 
-    <input
-      type="text"
-      placeholder="6-digit OTP" 
+              <input
+                type="text"
+                placeholder="6-digit OTP" 
                 value={otpInput} 
                 onChange={e => setOtpInput(e.target.value)} 
                 className="w-full bg-slate-50 border p-3 rounded-xl text-center tracking-widest font-bold"
@@ -303,8 +305,12 @@ export default function HrPortal({
                 onChange={e => setPasswordInput(e.target.value)} 
                 className="w-full bg-slate-50 border p-3 rounded-xl"
               />
-              <div id="recaptcha-container-hr" ref={recaptchaContainerRef}></div>
-              <button disabled={isVerifyingOtp} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">Verify & Login</button>
+              
+              <button disabled={isVerifyingOtp} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold disabled:opacity-50">
+                {isVerifyingOtp ? 'Verifying...' : 'Verify & Login'}
+              </button>
+              
+              {otpStatus && <p className="text-xs text-slate-400 mt-2 text-center">{otpStatus}</p>}
             </form>
           )}
         </div>
