@@ -131,14 +131,17 @@ export default function HrPortal({
   const handleSendRealOtp = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // 1. First, check if the length is correct
-    if (phoneInput.length !== 10) {
+   // 1. Extract exactly the last 10 digits from whatever is typed (removes any spaces, +91, etc.)
+    const cleanDigits = phoneInput.replace(/\D/g, ''); 
+    const last10Digits = cleanDigits.slice(-10); 
+
+    if (last10Digits.length !== 10) {
       toast('Enter a valid 10-digit mobile number.', 'error');
       return;
     }
 
-    // 2. Format the number with +91 AFTER the check
-    const phoneNumber = phoneInput.startsWith('+91') ? phoneInput : `+91${phoneInput}`;
+    // 2. Format the number precisely with the +91 regional prefix for Firebase
+    const phoneNumber = `+91${last10Digits}`;
 
     try {
       setIsSendingOtp(true);
