@@ -130,17 +130,25 @@ export default function HrPortal({
 
   const handleSendRealOtp = async (e: React.MouseEvent) => {
     e.preventDefault();
+    
+    // 1. First, check if the length is correct
     if (phoneInput.length !== 10) {
       toast('Enter a valid 10-digit mobile number.', 'error');
       return;
     }
+
+    // 2. Format the number with +91 AFTER the check
+    const phoneNumber = phoneInput.startsWith('+91') ? phoneInput : `+91${phoneInput}`;
+
     try {
       setIsSendingOtp(true);
       setOtpStatus('Initializing secure Firebase handshake...');
-      const phoneNumber = normalizeIndiaPhoneForFirebase(phoneInput);
+      
+      // 3. Use the formatted 'phoneNumber' for the Firebase call
       const result = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifierRef.current!);
+      
       setConfirmationResult(result);
-      setOtpStatus(`OTP sent to ${formatIndiaPhoneNumber(phoneInput)}.`);
+      setOtpStatus(`OTP sent to ${phoneNumber}.`);
       toast('OTP Sent Successfully.', 'success');
     } catch (err: any) {
       setOtpStatus(`Error: ${err.message}`);
@@ -148,7 +156,7 @@ export default function HrPortal({
     } finally {
       setIsSendingOtp(false);
     }
-  };
+  }; // This closes handleSendRealOtp cleanly
 
   // --- Auth Handlers ---
   const handleEmployeeLogin = (e: React.FormEvent) => {
@@ -161,7 +169,6 @@ export default function HrPortal({
       toast('Invalid Credentials', 'error');
     }
   };
-
   const handleLoginHr = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
