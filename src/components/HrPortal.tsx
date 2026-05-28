@@ -131,8 +131,8 @@ export default function HrPortal({
   const handleSendRealOtp = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-   // 1. Extract exactly the last 10 digits from whatever is typed (removes any spaces, +91, etc.)
-    const cleanDigits = phoneInput.replace(/\D/g, ''); 
+   // 1. Extract exactly the last 10 digits from whatever is typed
+    const cleanDigits = phoneInput.replace(/[^0-9]/g, ''); 
     const last10Digits = cleanDigits.slice(-10); 
 
     if (last10Digits.length !== 10) {
@@ -142,7 +142,6 @@ export default function HrPortal({
 
     // 2. Format the number precisely with the +91 regional prefix for Firebase
     const phoneNumber = `+91${last10Digits}`;
-
     try {
       setIsSendingOtp(true);
       setOtpStatus('Initializing secure Firebase handshake...');
@@ -282,11 +281,17 @@ export default function HrPortal({
                   onChange={e => setPhoneInput(sanitizeIndiaMobileDigits(e.target.value))}
                   className="flex-1 bg-slate-50 border p-3 rounded-xl"
                 />
-                <button type="button" onClick={handleSendRealOtp} className="px-4 bg-slate-200 rounded-xl text-xs font-bold">Send OTP</button>
-              </div>
-              <input 
-                type="text" 
-                placeholder="6-digit OTP" 
+                <button type="button" onClick={handleSendRealOtp} className="px-4 bg-slate...">
+        Send OTP
+      </button>
+    </div>
+
+    {/* PASTE THIS LINE EXACTLY HERE */}
+    <div id="recaptcha-container"></div>
+
+    <input
+      type="text"
+      placeholder="6-digit OTP" 
                 value={otpInput} 
                 onChange={e => setOtpInput(e.target.value)} 
                 className="w-full bg-slate-50 border p-3 rounded-xl text-center tracking-widest font-bold"
