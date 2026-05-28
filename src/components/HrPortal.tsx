@@ -109,7 +109,7 @@ export default function HrPortal({
   // --- Sync Effects ---
   useEffect(() => {
     const unsubHr = onSnapshot(collection(db, "hr_users"), (snap) => {
-      setRegisteredHrsList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as HrUser[]);
+      setRegisteredHrsList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as HrUser[]);
     });
     const unsubBin = onSnapshot(collection(db, "recycle_bin"), (snap) => {
       setRecycleBin(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as RecycleBinItem[]);
