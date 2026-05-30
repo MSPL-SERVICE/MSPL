@@ -9,6 +9,7 @@ export interface DocumentFile {
   name: string;
   type: string;
   data: string; // Base64 or Text representation
+  url?: string;
   uploadedAt: string;
   status: 'uploaded' | 'verified';
 }
@@ -73,6 +74,9 @@ export interface Employee {
   };
   // Dynamic document uploads
   uploadedFilesList?: DocumentFile[];
+  // Optional extended shapes used by HR UI
+  documents?: { [key: string]: DocumentFile };
+  salaryConfig?: { basic: number; allowances: number; deductions: number };
 }
 
 export interface InventoryItem {
@@ -108,6 +112,11 @@ export interface AttendanceLog {
   longitude?: number;
   isManualOverride: boolean;
   overrideBy?: string;
+  // Optional extended fields used by HR UI
+  punchIn?: string;
+  punchOut?: string;
+  status?: string;
+  coordinates?: string;
 }
 
 export interface Payslip {
@@ -132,6 +141,7 @@ export interface PayslipFormat {
 }
 
 export interface HrUser {
+  id?: string;
   phoneNumber: string;
   password?: string;
   verified: boolean;
@@ -143,8 +153,12 @@ export interface EmployeeHelpQuery {
   employeeId: string;
   employeeName: string;
   projectName: string;
-  priority: 'normal' | 'urgent';
+  priority: 'normal' | 'urgent' | 'High';
   queryText: string;
+  // Legacy / alternate UI fields
+  issueDescription?: string;
+  reportedBy?: string;
+  timestamp?: string;
   attachment?: string | null;
   submittedAt: string;
   hrResponse?: string;

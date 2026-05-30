@@ -1328,6 +1328,10 @@ export default function App() {
                   setCurrentEmployee(emp);
                   localStorage.setItem('mspl_current_employee', JSON.stringify(emp));
                 }}
+                appendTerminalLog={(msg: string) => {
+                  setTerminalLogs(prev => [...prev, msg]);
+                  setActiveTerminalSector('hr');
+                }}
               />
             )}
           </div>
